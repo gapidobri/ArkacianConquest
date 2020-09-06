@@ -1,0 +1,6 @@
+name: ArkacianConquest
+version: ${project.version}
+main: ga.arkacia.conquest.ArkacianConquest
+api-version: 1.16
+authors: [ gapidobri ]
+description: Arkacia’s Custom Town/Nation Plugin
