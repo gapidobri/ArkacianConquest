@@ -4,3 +4,10 @@ main: ga.arkacia.conquest.ArkacianConquest
 api-version: 1.16
 authors: [ gapidobri ]
 description: Arkacia’s Custom Town/Nation Plugin
+commands:
+  nation:
+    usage: /nation [command]
+    aliases: [ n ]
+  town:
+    usage: /town [command]
+    aliases: [ t ]
