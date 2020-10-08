@@ -1,34 +1,53 @@
 package ga.arkacia.conquest.commands.town;
 
-import ga.arkacia.conquest.commands.ICommand;
-import ga.arkacia.conquest.objects.Citizen;
+import ga.arkacia.conquest.commands.ISubCommand;
+import ga.arkacia.conquest.objects.citizen.Citizen;
+import ga.arkacia.conquest.objects.chunk.ClaimedChunk;
 import ga.arkacia.conquest.objects.town.Town;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-public class CommandTownCreate implements ICommand {
+import static ga.arkacia.conquest.Config.lang;
+import static ga.arkacia.conquest.Functions.stringFromArray;
+
+public class CommandTownCreate implements ISubCommand {
     @Override
-    public String getCommand() {
+    public String getSubCommand() {
         return "create";
     }
 
     @Override
+    public String[] getTabComplete() {
+        return new String[0];
+    }
+
+    @Override
     public void run(CommandSender sender, Command command, String label, String[] args) {
-        Town town = new Town(args[0]);
-        //town.setOwner(Nation.getNation(args[1])); // TODO: Towns without a nation
-        town.setOwner(Citizen.getCitizen((OfflinePlayer) sender).getOwnedNations().get(0)); // TODO: Multiple nations?
-        switch (Town.addTown(town)) {
+        Citizen citizen = Citizen.getCitizen((OfflinePlayer) sender);
+        if (citizen.getOwnedTown() != null) {
+            sender.sendMessage("You are already an owner of a town");
+            return;
+        }
+        Town town = new Town(ChatColor.translateAlternateColorCodes('&', stringFromArray(args)));
+        town.addCitizen(citizen);
+        if (ClaimedChunk.getChunk(((OfflinePlayer) sender).getPlayer().getChunk()) != null) {
+            sender.sendMessage(lang("chunk.claim.exists", ClaimedChunk.getOwnerTown(((Player) sender).getChunk()).getDisplayName()));
+            return;
+        }
+        switch (Town.addTown(town, citizen)) {
             case OK:
-                Citizen.getCitizen((OfflinePlayer) sender).ownTown(town);
-                sender.sendMessage(ChatColor.GREEN + town.getDisplayName() + " created successfully");
+                citizen.setOwnedTown(town);
+                ClaimedChunk.claimChunk(((Player) sender).getChunk(), town, citizen);
+                sender.sendMessage(lang("town.create.ok", town.getDisplayName()));
                 break;
             case EXISTS:
-                sender.sendMessage(ChatColor.RED + town.getDisplayName() + " already exists");
+                sender.sendMessage(lang("town.create.exists", town.getDisplayName()));
                 break;
             case BALANCE:
-                sender.sendMessage(ChatColor.RED + "You don't have enough money to create a town");
+                sender.sendMessage(lang("town.create.balance"));
                 break;
         }
     }

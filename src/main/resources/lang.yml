@@ -1,0 +1,41 @@
+currency:
+  singular: "Drake"
+  plural: "Drakes"
+
+general:
+  no-command: "This command doesn't exist"
+
+chunk:
+  claim:
+    ok: "Chunk has been claimed"
+    balance: "You don't have enough money"
+    balance-bank: "There is not enough money in the bank"
+    exists: "This chunk is already claimed by %1%" # %1% = owner
+
+nation:
+  create:
+    ok: "%1% has been created successfully" # %1% = name
+    no-town: "You don't own a town"
+    balance: "You don't have enough money"
+    exists: "%1% already exist" # %1% = name
+  list:
+    head: "List of nations"
+    list: "%1%" # %1% = name
+  rename:
+    ok: "Nation has been renamed" # %1% = old, %2% = new
+
+town:
+  create:
+    ok: "%1% has been created successfully" # %1% = name
+    balance: "You don't have enough money"
+    exists: "%1% already exist" # %1% = name
+  list:
+    head: "List of towns"
+    list: "%1% &7[%2%]" # %1% = name, %2% = id
+  rename:
+    ok: "Town has been renamed from %1% to %2%" # %1% = old, %2% = new
+    exists: "Town with that name already exists"
+
+bank:
+  no-town: "You are not in a town"
+  balance: "There is %1% in bank"

@@ -3,30 +3,27 @@ package ga.arkacia.conquest.commands.nation;
 import ga.arkacia.conquest.commands.ISubCommand;
 import ga.arkacia.conquest.objects.citizen.Citizen;
 import ga.arkacia.conquest.objects.nation.Nation;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-import static ga.arkacia.conquest.Config.lang;
-import static ga.arkacia.conquest.gui.NationListGUI.showGUI;
+import static ga.arkacia.conquest.Functions.stringFromArray;
 
-public class CommandNationList implements ISubCommand {
+public class CommandNationRename implements ISubCommand {
     @Override
     public String getSubCommand() {
-        return "list";
+        return "rename";
     }
 
     @Override
     public String[] getTabComplete() {
-        return new String[0];
+        return (String[]) Nation.getNationNames().toArray();
     }
 
     @Override
     public void run(CommandSender sender, Command command, String label, String[] args) {
-        sender.sendMessage(lang("nation.list.head"));
-        for (Nation nation : Nation.getNations()) {
-            sender.sendMessage(lang("nation.list.list", nation.getDisplayName()));
-        }
-        showGUI(Citizen.getCitizen((OfflinePlayer) sender));
+        Citizen.getCitizen((OfflinePlayer) sender).getOwnedNation().setDisplayName(stringFromArray(args));
+        sender.sendMessage(ChatColor.GREEN + "Nation has been renamed");
     }
 }

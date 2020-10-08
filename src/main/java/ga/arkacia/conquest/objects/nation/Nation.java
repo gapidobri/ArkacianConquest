@@ -1,75 +1,96 @@
 package ga.arkacia.conquest.objects.nation;
 
 import com.earth2me.essentials.api.UserDoesNotExistException;
-import ga.arkacia.conquest.objects.Citizen;
-import ga.arkacia.conquest.objects.CreationResponse;
+import ga.arkacia.conquest.objects.citizen.Citizen;
+import ga.arkacia.conquest.objects.EResponse;
 import ga.arkacia.conquest.objects.bank.BankResponse;
-import ga.arkacia.conquest.objects.chunk.ClaimedChunk;
-import ga.arkacia.conquest.objects.chunk.IChunkOwner;
 import ga.arkacia.conquest.objects.town.ITownOwner;
 import ga.arkacia.conquest.objects.town.Town;
-import org.bukkit.Chunk;
+import org.bukkit.ChatColor;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static ga.arkacia.conquest.ArkacianConquest.nationPrice;
+import static ga.arkacia.conquest.Database.updateDB;
 import static ga.arkacia.conquest.Functions.idGen;
 
-public class Nation implements INationOwner, ITownOwner, IChunkOwner {
-    static List<Nation> nations = new ArrayList<>();
+public class Nation implements ConfigurationSerializable, ITownOwner {
+    public static List<Nation> nations = new ArrayList<>();
 
     String id; // All lowercase name of the nation
     String displayName; // Pretty name of the nation
-    INationOwner owner;
-    List<ClaimedChunk> ownedLand = new ArrayList<>(); // Chunks that are owned by the nation
-    List<Nation> ownedNations = new ArrayList<>();
-    List<Town> ownedTowns = new ArrayList<>();
-    List<Citizen> citizens = new ArrayList<>();
-    List<Town> towns = new ArrayList<>();
+
+    public Nation() {}
 
     public Nation(String displayName) {
-        this(displayName, null);
-    }
-
-    public Nation(String displayName, INationOwner owner) {
         this.displayName = displayName;
         id = idGen(displayName);
-        this.owner = owner;
     }
 
-    @Override
-    public void claimChunk(Chunk chunk) {
-        ownedLand.add(new ClaimedChunk(chunk, this));
+    public static List<Nation> getNations() {
+        return nations;
     }
 
-    @Override
-    public void ownNation(Nation nation) {
-        nation.setOwner(this);
-        ownedNations.add(nation);
+    public static Nation getNation(String name) {
+        for (Nation nation : nations) {
+            if (nation.getDisplayName().equals(name) || nation.getId().equals(name)) return nation;
+        }
+        return null;
+    }
+
+    public static List<String> getNationNames() {
+        List<String> names = new ArrayList<>();
+        for (Nation nation : nations) {
+            names.add(nation.getDisplayName());
+        }
+        return names;
+    }
+
+    public static EResponse addNation(Nation nation) {
+        for (Nation n : nations) {
+            if (n.getId().equals(nation.getId())) return EResponse.EXISTS;
+        }
+
+        if (nation.getOwner() == null) return EResponse.MISSING;
+
+        try {
+            if (nation.getOwner().getBalance() < nationPrice) return EResponse.BALANCE;
+        } catch (UserDoesNotExistException e) {
+            e.printStackTrace();
+        }
+
+        nation.getOwner().takeMoney(nationPrice);
+        nations.add(nation);
+        updateDB();
+        return EResponse.OK;
     }
 
     @Override
     public int getBalance() throws UserDoesNotExistException {
-        // TODO: Nation banks?
         return getOwner().getBalance();
     }
 
     @Override
-    public BankResponse pay(int amount) {
-        return getOwner().pay(amount);
-    }
-
-    public INationOwner getOwner() {
-        return owner;
+    public BankResponse takeMoney(int amount) {
+        return getOwner().takeMoney(amount);
     }
 
     @Override
-    public void ownTown(Town town) {
-        town.setOwner(this);
-        ownedTowns.add(town);
+    public void giveMoney(int amount) {
+        getOwner().giveMoney(amount);
     }
 
+    public Citizen getOwner() {
+        for (Citizen citizen : Citizen.getCitizens()) {
+            if (citizen.getOwnedTown().getOwnedNation() == this) return citizen;
+        }
+        return null;
+    }
 
     public String getId() {
         return id;
@@ -84,38 +105,23 @@ public class Nation implements INationOwner, ITownOwner, IChunkOwner {
     }
 
     public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+        this.displayName = ChatColor.translateAlternateColorCodes('&', displayName);
     }
 
-    public void setOwner(INationOwner owner) {
-        this.owner = owner;
+    @Override
+    public @NotNull Map<String, Object> serialize() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", id);
+        map.put("displayName", displayName);
+
+        return map;
     }
 
-    public static List<Nation> getNations() {
-        return nations;
-    }
+    public static Nation deserialize(Map<String, Object> map) {
+        Nation nation = new Nation();
+        nation.id = (String) map.get("id");
+        nation.displayName = (String) map.get("displayName");
 
-    public static Nation getNation(String name) {
-        for (Nation nation : nations) {
-            if (nation.getDisplayName().equals(name) || nation.getId().equals(name)) return nation;
-        }
-        return null;
-    }
-
-    public static CreationResponse addNation(Nation nation) {
-        for (Nation n : nations) {
-            if (n.getId().equals(nation.getId())) return CreationResponse.EXISTS;
-        }
-
-        try {
-            if (nation.getOwner().getBalance() < nationPrice) return CreationResponse.BALANCE;
-        } catch (UserDoesNotExistException e) {
-            e.printStackTrace();
-        }
-
-        nation.getOwner().pay(nationPrice);
-
-        nations.add(nation);
-        return CreationResponse.OK;
+        return nation;
     }
 }

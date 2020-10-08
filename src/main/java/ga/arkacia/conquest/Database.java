@@ -1,47 +1,35 @@
 package ga.arkacia.conquest;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import ga.arkacia.conquest.objects.chunk.ClaimedChunk;
+import ga.arkacia.conquest.objects.citizen.Citizen;
+import ga.arkacia.conquest.objects.nation.Nation;
+import ga.arkacia.conquest.objects.town.Town;
+import org.bukkit.configuration.file.FileConfiguration;
+
+import java.util.List;
+
+import static ga.arkacia.conquest.ArkacianConquest.plugin;
 
 public class Database {
 
-    private Connection connection;
-    private Statement statement;
-    private String host, database, username, password;
-    private int port;
-
-    public Database(String host, String database, String username, String password, int port) {
-        this.host = host;
-        this.database = database;
-        this.username = username;
-        this.password = password;
-        this.port = port;
+    public static void updateDB() {
+        FileConfiguration config = plugin.getConfig();
+        config.set("chunks", ClaimedChunk.getClaimedChunks());
+        config.set("citizens", Citizen.getCitizens());
+        config.set("towns", Town.getTowns());
+        config.set("nations", Nation.getNations());
+        plugin.saveConfig();
     }
 
-    public void openConnection() throws SQLException, ClassNotFoundException {
-        if (connection != null && !connection.isClosed()) {
-            return;
-        }
+    public static void loadFromDB() {
+        FileConfiguration config = plugin.getConfig();
+        if (config.contains("chunks")) ClaimedChunk.claimedChunks = (List<ClaimedChunk>) config.getList("chunks");
+        if (config.contains("citizens")) Citizen.citizens = (List<Citizen>) config.getList("citizens");
+        if (config.contains("towns")) Town.towns = (List<Town>) config.get("towns");
+        if (config.contains("nations")) Nation.nations = (List<Nation>) config.get("nations");
 
-        synchronized (this) {
-            if (connection != null && !connection.isClosed()) {
-                return;
-            }
-            Class.forName("com.mysql.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database, username, password);
-            statement = connection.createStatement();
-        }
+        Citizen.linkData();
+        Town.linkData();
+
     }
-
-    public void setSomething() {
-        try {
-            statement.executeUpdate("CREATE TABLE NationData (id varchar(255), display_name varchar(255))");
-            statement.executeUpdate("INSERT INTO NationData (ID, DISPLAY_NAME) VALUES ('test_nation', 'Test Nation')");
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-
 }

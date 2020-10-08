@@ -2,16 +2,18 @@ package ga.arkacia.conquest.commands.town.bank;
 
 import ga.arkacia.conquest.commands.ISubCommand;
 import ga.arkacia.conquest.objects.citizen.Citizen;
+import ga.arkacia.conquest.objects.bank.Bank;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 import static ga.arkacia.conquest.Config.lang;
 
-public class CommandTownBankBalance implements ISubCommand {
+public class CommandTownBankWithdraw implements ISubCommand {
     @Override
     public String getSubCommand() {
-        return "balance";
+        return "withdraw";
     }
 
     @Override
@@ -25,8 +27,14 @@ public class CommandTownBankBalance implements ISubCommand {
             sender.sendMessage(lang("bank.no-town"));
             return;
         }
-        sender.sendMessage(
-                String.valueOf(Citizen.getCitizen((OfflinePlayer) sender).getOwnedTown()
-                        .getBank().getBalanceString()));
+        int amount = Integer.parseInt(args[0]);
+        Citizen citizen = Citizen.getCitizen((OfflinePlayer) sender);
+        Bank bank = citizen.getOwnedTown().getBank();
+        if (bank.getBalance() < amount) {
+            sender.sendMessage(ChatColor.RED + "Bank doesn't have enough money");
+            return;
+        }
+        bank.withdraw(amount);
+        citizen.giveMoney(amount);
     }
 }

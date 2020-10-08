@@ -1,7 +1,8 @@
 package ga.arkacia.conquest.objects;
 
-public enum CreationResponse {
+public enum EResponse {
     OK,
     EXISTS,
-    BALANCE
+    BALANCE,
+    MISSING,
 }

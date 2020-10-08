@@ -1,12 +1,14 @@
 package ga.arkacia.conquest.objects.chunk;
 
+import com.earth2me.essentials.api.UserDoesNotExistException;
+import ga.arkacia.conquest.objects.bank.BankResponse;
 import org.bukkit.Chunk;
 
 public interface IChunkOwner {
-    /*
-    - Status of the chunk [ free / claimed ]
-    - CHANGE VOID TO RESPONSE (can you claim this chunk, return who claimed the chunk)
-     */
+    String getDisplayName();
+    int getBalance() throws UserDoesNotExistException;
+    BankResponse takeMoney(int amount);
+    void giveMoney(int amount);
     void claimChunk(Chunk chunk);
     // void unclaimChunk(Chunk chunk);
 }
